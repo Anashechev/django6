@@ -1,0 +1,68 @@
+{% extends 'bookstore/base.html' %}
+
+{% block title %}Профиль{% endblock %}
+
+{% block content %}
+<style>
+@keyframes gradientFlow {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+.profile-gradient {
+    background: linear-gradient(120deg, #1a237e, #ff4d00, #ff9800, #1a237e);
+    background-size: 300% 300%;
+    animation: gradientFlow 6s ease-in-out infinite;
+}
+</style>
+<div class="container d-flex justify-content-center align-items-center" style="min-height: 70vh;">
+    <div class="card shadow-lg p-4 profile-gradient" style="max-width: 420px; width: 100%; border-radius: 1.5rem; color: #fff; border: none;">
+        <div class="d-flex flex-column align-items-center" id="profile-content">
+            <div>Загрузка...</div>
+        </div>
+    </div>
+</div>
+<script>
+function renderProfile(user) {
+    const isAdmin = user.is_staff || user.is_superuser;
+    document.getElementById('profile-content').innerHTML = `
+        <div class="rounded-circle bg-white d-flex align-items-center justify-content-center mb-3" style="width: 100px; height: 100px; box-shadow: 0 4px 16px rgba(0,0,0,0.2);">
+            <i class="fas fa-user-circle" style="font-size: 4rem; color: #1a237e;"></i>
+        </div>
+        <h2 class="fw-bold mb-1" style="letter-spacing: 1px;">${user.username}</h2>
+        <span class="badge ${isAdmin ? 'bg-warning text-dark' : 'bg-light text-dark'} mb-3" style="font-size: 1rem;">
+            ${isAdmin ? 'Администратор' : 'Пользователь'}
+        </span>
+        <div class="w-100 mb-3">
+            <div class="d-flex align-items-center justify-content-center mb-2">
+                <i class="fas fa-envelope me-2"></i>
+                <span>${user.email || '-'}</span>
+            </div>
+        </div>
+        <div class="d-flex gap-2 w-100 mt-3">
+            <a href="/logout/" class="btn btn-outline-light w-100">Выйти</a>
+            <a href="/password_change/" class="btn btn-outline-light w-100">Сменить пароль</a>
+        </div>
+        ${isAdmin ? `<div class="alert alert-warning mt-4 w-100 text-center" style="background: rgba(255,255,255,0.15); border: none; color: #fff;"><i class="fas fa-crown me-2"></i>У вас есть права администратора. Вы можете добавлять, редактировать и удалять книги.</div>` : ''}
+    `;
+}
+
+function loadProfile() {
+    fetch('/api/user-profile/')
+        .then(r => {
+            if (r.status === 403 || r.status === 401) {
+                window.location.href = '/login/';
+                return;
+            }
+            return r.json();
+        })
+        .then(user => {
+            if (user) renderProfile(user);
+        })
+        .catch(() => {
+            document.getElementById('profile-content').innerHTML = '<div class="text-danger">Ошибка загрузки профиля</div>';
+        });
+}
+document.addEventListener('DOMContentLoaded', loadProfile);
+</script>
+{% endblock %} 

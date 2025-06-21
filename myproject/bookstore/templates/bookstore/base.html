@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}МАГА-зин{% endblock %}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        html, body {
+            height: 100%;
+            margin: 0;
+        }
+        
+        body {
+            display: flex;
+            flex-direction: column;
+            background-color: #0a192f;
+            color: #ffffff;
+            min-height: 100vh;
+        }
+        
+        main {
+            flex: 1 0 auto;
+        }
+        
+        footer {
+            flex-shrink: 0;
+        }
+        
+        .navbar {
+            background-color: #020c1b !important;
+            border-bottom: 3px solid #ff4d00;
+        }
+        
+        .navbar-brand {
+            font-size: 2.5rem;
+            font-weight: bold;
+        }
+        
+        .navbar-brand .maga {
+            color: #ff4d00;
+        }
+        
+        .navbar-brand .zin {
+            color: #ffffff;
+        }
+        
+        .nav-link {
+            font-size: 1.2rem;
+            color: #ffffff !important;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .nav-link:hover {
+            color: #ff4d00 !important;
+        }
+        
+        .book-card {
+            background-color: #020c1b;
+            border: 2px solid #ff4d00;
+            transition: transform 0.3s;
+            height: 100%;
+        }
+        
+        .book-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 4px 15px rgba(255, 77, 0, 0.3);
+        }
+        
+        .book-cover {
+            height: 300px;
+            object-fit: cover;
+            border-bottom: 2px solid #ff4d00;
+        }
+        
+        .card-title {
+            color: #ff4d00;
+            font-weight: bold;
+        }
+        
+        .price {
+            font-size: 1.4rem;
+            font-weight: bold;
+            color: #ff4d00;
+        }
+        
+        .btn-outline-primary {
+            color: #ff4d00;
+            border-color: #ff4d00;
+        }
+        
+        .btn-outline-primary:hover {
+            background-color: #ff4d00;
+            color: #0a192f;
+            border-color: #ff4d00;
+        }
+        
+        .badge {
+            font-size: 0.9rem;
+            padding: 0.5em 1em;
+        }
+        
+        .bg-secondary {
+            background-color: #ff4d00 !important;
+            color: #0a192f !important;
+        }
+        
+        .bg-info {
+            background-color: #ffffff !important;
+            color: #0a192f !important;
+        }
+        
+        .bg-primary {
+            background-color: #ff4d00 !important;
+            color: #0a192f !important;
+        }
+        
+        .pagination .page-link {
+            background-color: #020c1b;
+            color: #ff4d00;
+            border-color: #ff4d00;
+        }
+        
+        .pagination .page-item.active .page-link {
+            background-color: #ff4d00;
+            color: #0a192f;
+            border-color: #ff4d00;
+        }
+        
+        .pagination .page-link:hover {
+            background-color: #ff4d00;
+            color: #0a192f;
+        }
+        
+        .display-1 {
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+        }
+        
+        .lead {
+            color: #8892b0;
+        }
+    </style>
+</head>
+<body>
+    {% include 'bookstore/includes/header.html' %}
+
+    <main class="container my-4">
+        {% block content %}
+        {% endblock %}
+    </main>
+
+    {% block footer %}
+        {% include 'bookstore/includes/footer.html' %}
+    {% endblock %}
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html> 

@@ -1,0 +1,193 @@
+{% extends 'base.html' %}
+
+{% block title %}Каталог товаров{% endblock %}
+
+{% block extra_css %}
+<style>
+    .catalog-header {
+        text-align: center;
+        margin-bottom: 2rem;
+        padding: 2rem 0;
+        border-bottom: 2px solid var(--flame-red);
+    }
+
+    .catalog-header h1 {
+        color: var(--flame-red);
+        font-size: 2.5rem;
+        margin-bottom: 1rem;
+    }
+
+    .search-section {
+        margin-bottom: 2rem;
+        padding: 1rem;
+        background: var(--matte-black);
+        border-radius: 8px;
+        border: 1px solid var(--flame-red);
+    }
+
+    .search-form {
+        display: flex;
+        gap: 1rem;
+        max-width: 600px;
+        margin: 0 auto;
+    }
+
+    .search-input {
+        flex: 1;
+        padding: 0.8rem;
+        border: 1px solid var(--flame-red);
+        border-radius: 4px;
+        background: var(--matte-black);
+        color: #ffffff;
+    }
+
+    .search-input:focus {
+        outline: none;
+        border-color: #ff3333;
+    }
+
+    .search-button {
+        padding: 0.8rem 1.5rem;
+        background: var(--flame-red);
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        transition: background-color 0.3s ease;
+    }
+
+    .search-button:hover {
+        background: #ff3333;
+    }
+
+    .catalog-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        gap: 2rem;
+        padding: 2rem 0;
+    }
+
+    .product-card {
+        position: relative;
+        border-radius: 8px;
+        overflow: hidden;
+        transition: transform 0.3s ease;
+    }
+
+    .product-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: var(--metallic-silver);
+        opacity: 0.1;
+        z-index: 1;
+    }
+
+    .product-card:hover {
+        transform: translateY(-5px);
+    }
+
+    .product-image {
+        width: 100%;
+        height: 300px;
+        object-fit: cover;
+    }
+
+    .product-info {
+        position: relative;
+        z-index: 2;
+        padding: 1.5rem;
+        background: var(--matte-black);
+    }
+
+    .product-title {
+        color: #ffffff;
+        font-size: 1.2rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .product-price {
+        color: var(--flame-red);
+        font-size: 1.5rem;
+        font-weight: bold;
+        margin: 1rem 0;
+    }
+
+    .product-details {
+        color: #ffffff;
+        font-size: 0.9rem;
+        margin-bottom: 1rem;
+    }
+
+    .product-button {
+        background-color: var(--flame-red);
+        color: white;
+        border: none;
+        padding: 0.8rem 1.5rem;
+        border-radius: 4px;
+        cursor: pointer;
+        transition: background-color 0.3s ease;
+        width: 100%;
+    }
+
+    .product-button:hover {
+        background-color: #ff3333;
+    }
+
+    @media (max-width: 768px) {
+        .catalog-grid {
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 1rem;
+        }
+
+        .product-image {
+            height: 250px;
+        }
+
+        .search-form {
+            flex-direction: column;
+        }
+
+        .search-button {
+            width: 100%;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="catalog-header">
+    <h1>Каталог товаров</h1>
+    <p>Выберите из нашего ассортимента</p>
+</div>
+
+<div class="search-section">
+    <form class="search-form" method="get">
+        <input type="text" name="search" class="search-input" placeholder="Поиск по названию или описанию..." value="{{ request.GET.search }}">
+        <button type="submit" class="search-button">Поиск</button>
+    </form>
+</div>
+
+<div class="catalog-grid">
+    {% for item in clothes %}
+    <div class="product-card">
+        {% if item.photo %}
+            <img src="{{ item.photo.url }}" alt="{{ item.name }}" class="product-image">
+        {% endif %}
+        <div class="product-info">
+            <h3 class="product-title">{{ item.name }}</h3>
+            <p class="product-details">{{ item.description }}</p>
+            <p class="product-price">{{ item.price }} ₽</p>
+            <p class="product-details">Размер: {{ item.size }}</p>
+            <p class="product-details">Цвет: {{ item.color }}</p>
+            <button class="product-button">Подробнее</button>
+        </div>
+    </div>
+    {% empty %}
+    <p>Товары пока не добавлены</p>
+    {% endfor %}
+</div>
+{% endblock %}

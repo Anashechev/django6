@@ -1,0 +1,169 @@
+{% extends 'bookstore/base.html' %}
+
+{% block title %}{% if request.path|slice:'-6:' == 'create' %}Добавить книгу{% else %}Редактировать книгу{% endif %}{% endblock %}
+
+{% block content %}
+<div class="container mt-4" style="max-width: 600px;">
+    <div class="card shadow p-4">
+        <h2 class="mb-4 text-center" id="form-title">Загрузка...</h2>
+        <form id="book-form" enctype="multipart/form-data">
+            <div class="mb-3">
+                <label class="form-label">Название</label>
+                <input type="text" class="form-control" name="title" id="title" required>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Описание</label>
+                <textarea class="form-control" name="description" id="description" rows="4"></textarea>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Цена</label>
+                <input type="number" class="form-control" name="price" id="price" required step="0.01">
+            </div>
+            <div class="mb-3">
+                <label class="form-label">ISBN</label>
+                <input type="text" class="form-control" name="isbn" id="isbn" required>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Дата публикации</label>
+                <input type="date" class="form-control" name="publication_date" id="publication_date" required>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Количество страниц</label>
+                <input type="number" class="form-control" name="pages" id="pages" required>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Количество на складе</label>
+                <input type="number" class="form-control" name="stock_quantity" id="stock_quantity" required>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Язык</label>
+                <input type="text" class="form-control" name="language" id="language" required>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Авторы</label>
+                <select class="form-select" name="authors" id="authors" multiple required></select>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Издатели</label>
+                <select class="form-select" name="publishers" id="publishers" multiple required></select>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Жанры</label>
+                <select class="form-select" name="genres" id="genres" multiple required></select>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Обложка</label>
+                <input type="file" class="form-control" name="cover_image" id="cover_image">
+                <div class="mt-2" id="current-cover"></div>
+            </div>
+            <div class="mt-4 d-flex justify-content-between">
+                <button type="submit" class="btn btn-primary">Сохранить</button>
+                <a href="/books/" class="btn btn-secondary">Отмена</a>
+            </div>
+        </form>
+        <div id="form-error" class="text-danger mt-3"></div>
+    </div>
+</div>
+<script>
+const form = document.getElementById('book-form');
+const formTitle = document.getElementById('form-title');
+const errorDiv = document.getElementById('form-error');
+const currentCover = document.getElementById('current-cover');
+const isEdit = window.location.pathname.includes('/edit');
+const bookId = isEdit ? window.location.pathname.match(/\d+/)[0] : null;
+
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+function loadChoices(url, selectId, selected=[]) {
+    fetch(url)
+        .then(r => r.json())
+        .then(data => {
+            const select = document.getElementById(selectId);
+            select.innerHTML = '';
+            data.results.forEach(item => {
+                const option = document.createElement('option');
+                option.value = item.id;
+                option.textContent = item.name;
+                if (selected.includes(item.id)) option.selected = true;
+                select.appendChild(option);
+            });
+        });
+}
+
+function loadBook() {
+    if (!isEdit) {
+        formTitle.textContent = 'Добавить книгу';
+        loadChoices('/api/authors/', 'authors');
+        loadChoices('/api/publishers/', 'publishers');
+        loadChoices('/api/genres/', 'genres');
+        return;
+    }
+    fetch(`/api/books/${bookId}/`)
+        .then(r => r.json())
+        .then(book => {
+            formTitle.textContent = 'Редактировать книгу';
+            form.title.value = book.title;
+            form.description.value = book.description;
+            form.price.value = book.price;
+            form.isbn.value = book.isbn;
+            form.publication_date.value = book.publication_date;
+            form.pages.value = book.pages;
+            form.stock_quantity.value = book.stock_quantity;
+            form.language.value = book.language;
+            loadChoices('/api/authors/', 'authors', book.authors.map(a => a.id));
+            loadChoices('/api/publishers/', 'publishers', book.publishers.map(p => p.id));
+            loadChoices('/api/genres/', 'genres', book.genres.map(g => g.id));
+            if (book.cover_image) {
+                currentCover.innerHTML = `<img src="${book.cover_image}" alt="Текущая обложка" class="img-thumbnail" style="max-width: 200px;">`;
+            }
+        });
+}
+
+form.addEventListener('submit', function(e) {
+    e.preventDefault();
+    errorDiv.textContent = '';
+    const formData = new FormData(form);
+    // Мультиселекты
+    ['authors', 'publishers', 'genres'].forEach(field => {
+        const select = document.getElementById(field);
+        formData.delete(field);
+        Array.from(select.selectedOptions).forEach(opt => {
+            formData.append(field, opt.value);
+        });
+    });
+    const url = isEdit ? `/api/books/${bookId}/` : '/api/books/';
+    const method = isEdit ? 'PUT' : 'POST';
+    fetch(url, {
+        method: method,
+        headers: { 'X-CSRFToken': getCookie('csrftoken') },
+        body: formData
+    })
+    .then(async r => {
+        if (r.ok) {
+            window.location.href = '/books/';
+        } else {
+            const data = await r.json();
+            errorDiv.textContent = data.detail || 'Ошибка сохранения';
+        }
+    })
+    .catch(() => {
+        errorDiv.textContent = 'Ошибка сохранения';
+    });
+});
+
+document.addEventListener('DOMContentLoaded', loadBook);
+</script>
+{% endblock %} 

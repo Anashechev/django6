@@ -1,0 +1,12 @@
+<h1>{{clothes.name}}</h1>
+<p>{{clothes.description}}</p>
+<p>Цена: {{clothes.price}}</p>
+<p>Размер: {{clothes.size}}</p>
+<p>Цвет: {{clothes.color}}</p>
+<p>Доступность: {% if clothes.is_exist %}Да{% else %}Нет{% endif %}</p>
+<p>Категория: {{clothes.category}}</p>
+<p>Коллекция: {% for collection on clothes.collection.all %} {{ collection.name }} {% if not forloop.last %}, {%endif%}{%endfor%}</p>
+<img src="{{ clothes.photo.url }}" alt="{{ clothes.name }}">
+<a href="{% url 'clothes_list' %}">Вернуться к списку одежды</a>
+<a href="{% url 'clothes_update' clothes.pk %}">Редактировать</a>
+<a href="{% url 'clothes_delete' clothes.pk %}">Удалить</a>

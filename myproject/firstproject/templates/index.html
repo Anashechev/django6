@@ -1,0 +1,103 @@
+{% extends 'base.html' %}
+
+{% block title %}МАГА-зин - Книжный магазин{% endblock %}
+
+{% block extra_css %}
+<style>
+    .hero-section {
+        text-align: center;
+        padding: 6rem 0;
+        background: linear-gradient(rgba(44, 62, 80, 0.9), rgba(44, 62, 80, 0.9)),
+                    url('/static/images/hero-bg.jpg') center/cover;
+        margin: -20px;
+        margin-bottom: 4rem;
+        border-radius: 0 0 20px 20px;
+    }
+
+    .hero-title {
+        color: var(--white);
+        font-size: 3.5rem;
+        margin-bottom: 1.5rem;
+        font-weight: 700;
+    }
+
+    .hero-subtitle {
+        color: var(--white);
+        font-size: 1.3rem;
+        margin-bottom: 2.5rem;
+        max-width: 800px;
+        margin-left: auto;
+        margin-right: auto;
+        line-height: 1.6;
+        opacity: 0.9;
+    }
+
+    .features {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 2rem;
+        margin-bottom: 4rem;
+    }
+
+    .feature-card {
+        background: var(--white);
+        padding: 2rem;
+        border-radius: 10px;
+        box-shadow: var(--shadow);
+        text-align: center;
+        transition: transform 0.3s ease;
+    }
+
+    .feature-card:hover {
+        transform: translateY(-5px);
+    }
+
+    .feature-title {
+        font-size: 1.5rem;
+        color: var(--primary-color);
+        margin-bottom: 1rem;
+        font-weight: 600;
+    }
+
+    .feature-text {
+        color: var(--text-color);
+        opacity: 0.8;
+        line-height: 1.6;
+    }
+
+    @media (max-width: 768px) {
+        .hero-title {
+            font-size: 2.5rem;
+        }
+
+        .hero-subtitle {
+            font-size: 1.1rem;
+            padding: 0 1rem;
+        }
+
+        .features {
+            grid-template-columns: 1fr;
+            padding: 0 1rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<section class="hero-section">
+    <h1 class="hero-title">МАГА-зин</h1>
+    <p class="hero-subtitle">Ваш надежный источник знаний и вдохновения</p>
+    <a href="/clothes/" class="btn">Перейти в каталог</a>
+</section>
+
+<section class="features">
+    <div class="feature-card">
+        <h3 class="feature-title">Богатый выбор</h3>
+        <p class="feature-text">Тысячи книг различных жанров и направлений для читателей всех возрастов. От классической литературы до современных бестселлеров.</p>
+    </div>
+    <div class="feature-card">
+        <h3 class="feature-title">Качество гарантировано</h3>
+        <p class="feature-text">Работаем только с проверенными издательствами. Каждая книга проходит тщательный отбор перед попаданием на полки нашего магазина.</p>
+    </div>
+</section>
+{% endblock %}

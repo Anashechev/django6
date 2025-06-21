@@ -1,0 +1,370 @@
+{% extends 'bookstore/base.html' %}
+
+{% block title %}Детали книги — МАГА-зин{% endblock %}
+
+{% block content %}
+<div class="container mt-4" id="book-detail-container">
+    <!-- Детали книги будут подгружаться через JS -->
+</div>
+<script>
+const container = document.getElementById('book-detail-container');
+const bookId = window.location.pathname.match(/\d+/)[0];
+
+function renderBook(book, isAdmin) {
+    let authors = book.authors.map(a => `<span class="badge bg-secondary me-2">${a.name}</span>`).join(' ');
+    let publishers = book.publishers.map(p => `<span class="badge bg-info me-2">${p.name}</span>`).join(' ');
+    let genres = book.genres.map(g => `<span class="badge bg-primary me-2">${g.name}</span>`).join(' ');
+    let cover = book.cover_image ? `<img src="${book.cover_image}" alt="${book.title}" class="img-fluid" style="width: 100%; height: 100%; object-fit: contain; background-color: #f8f9fa;">` : `<div class='bg-light h-100 d-flex align-items-center justify-content-center'><div class='text-center'><i class='fas fa-book fa-3x text-muted'></i><p class='mt-2 text-muted'>Нет обложки</p></div></div>`;
+    let adminBtns = isAdmin ? `<div><a href="#" class="btn btn-warning me-2" id="edit-btn"><i class="fas fa-edit"></i> Редактировать</a><a href="#" class="btn btn-danger" id="delete-btn"><i class="fas fa-trash"></i> Удалить</a></div>` : '';
+    
+    container.innerHTML = `
+    <div class="row">
+        <div class="col-md-4">
+            <div class="book-cover-container" style="width: 100%; height: 500px; overflow: hidden; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);">
+                ${cover}
+            </div>
+        </div>
+        <div class="col-md-8">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <h1 class="mb-3">${book.title}</h1>
+                ${adminBtns}
+            </div>
+            <p class="lead">${book.description || ''}</p>
+            <div class="mb-4"><h5>Авторы:</h5><p>${authors}</p></div>
+            <div class="mb-4"><h5>Издательства:</h5><p>${publishers}</p></div>
+            <div class="mb-4"><h5>Жанры:</h5><p>${genres}</p></div>
+            <div class="row mb-4">
+                <div class="col-md-6">
+                    <p><strong>ISBN:</strong> ${book.isbn}</p>
+                    <p><strong>Дата публикации:</strong> ${book.publication_date}</p>
+                    <p><strong>Количество страниц:</strong> ${book.pages}</p>
+                </div>
+                <div class="col-md-6">
+                    <p><strong>Язык:</strong> ${book.language}</p>
+                    <p><strong>Цена:</strong> ${book.price} ₽</p>
+                    <p><strong>На складе:</strong> ${book.stock_quantity} шт.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="row mt-5">
+        <div class="col-12">
+            <h3>Отзывы</h3>
+            <div id="review-form-container"></div>
+            <div id="reviews-list"></div>
+        </div>
+    </div>
+    `;
+    
+    // Показываем форму отзыва только зарегистрированным пользователям
+    checkAuthAndShowReviewForm();
+    
+    if (isAdmin) {
+        document.getElementById('edit-btn').addEventListener('click', showEditForm);
+        document.getElementById('delete-btn').addEventListener('click', deleteBook);
+    }
+}
+
+function checkAuthAndShowReviewForm() {
+    fetch('/api/user-profile/')
+        .then(response => {
+            if (response.ok) {
+                return response.json();
+            }
+            throw new Error('Not authenticated');
+        })
+        .then(user => {
+            // Пользователь зарегистрирован, показываем форму
+            document.getElementById('review-form-container').innerHTML = `
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5>Оставить отзыв</h5>
+                    </div>
+                    <div class="card-body">
+                        <form id="review-form">
+                            <div class="mb-3">
+                                <label for="rating" class="form-label">Оценка</label>
+                                <select class="form-select" id="rating" required>
+                                    <option value="">Выберите оценку</option>
+                                    <option value="1">1 - Плохо</option>
+                                    <option value="2">2 - Не очень</option>
+                                    <option value="3">3 - Удовлетворительно</option>
+                                    <option value="4">4 - Хорошо</option>
+                                    <option value="5">5 - Отлично</option>
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label for="comment" class="form-label">Комментарий</label>
+                                <textarea class="form-control" id="comment" rows="3" required placeholder="Напишите ваш отзыв о книге..."></textarea>
+                            </div>
+                            <button type="submit" class="btn btn-primary">Отправить отзыв</button>
+                        </form>
+                    </div>
+                </div>
+            `;
+            
+            // Добавляем обработчик отправки формы
+            document.getElementById('review-form').addEventListener('submit', submitReview);
+        })
+        .catch(() => {
+            // Пользователь не зарегистрирован, показываем сообщение
+            document.getElementById('review-form-container').innerHTML = `
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle"></i>
+                    Чтобы оставить отзыв, пожалуйста, <a href="/login/">войдите в систему</a> или <a href="/register/">зарегистрируйтесь</a>.
+                </div>
+            `;
+        });
+}
+
+function submitReview(e) {
+    e.preventDefault();
+    
+    const rating = document.getElementById('rating').value;
+    const comment = document.getElementById('comment').value;
+    
+    if (!rating || !comment) {
+        alert('Пожалуйста, заполните все поля');
+        return;
+    }
+    
+    fetch(`/api/books/${bookId}/reviews/create/`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCookie('csrftoken')
+        },
+        body: JSON.stringify({
+            rating: parseInt(rating),
+            comment: comment
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.detail) {
+            alert(data.detail);
+        } else {
+            // Отзыв успешно создан
+            alert('Отзыв успешно добавлен!');
+            document.getElementById('review-form').reset();
+            loadReviews(); // Перезагружаем отзывы
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Ошибка при отправке отзыва');
+    });
+}
+
+function renderReviews(reviews) {
+    const reviewsList = document.getElementById('reviews-list');
+    if (!reviews.length) {
+        reviewsList.innerHTML = '<p>Пока нет отзывов.</p>';
+        return;
+    }
+    let html = '';
+    reviews.forEach(r => {
+        const editButtons = r.can_edit ? `
+            <div class="mt-2">
+                <button class="btn btn-sm btn-outline-warning me-2" onclick="editReview(${r.id}, '${r.rating}', '${r.comment.replace(/'/g, "\\'")}')">
+                    <i class="fas fa-edit"></i> Редактировать
+                </button>
+                <button class="btn btn-sm btn-outline-danger" onclick="deleteReview(${r.id})">
+                    <i class="fas fa-trash"></i> Удалить
+                </button>
+            </div>
+        ` : '';
+        
+        html += `
+            <div class="card mb-3" id="review-${r.id}">
+                <div class="card-body">
+                    <h5 class="card-title">${r.user}</h5>
+                    <h6 class="card-subtitle mb-2 text-muted">Оценка: ${r.rating}/5</h6>
+                    <p class="card-text">${r.comment}</p>
+                    <p class="card-text"><small class="text-muted">${r.review_date}</small></p>
+                    ${editButtons}
+                </div>
+            </div>
+        `;
+    });
+    reviewsList.innerHTML = html;
+}
+
+function showEditForm(e) {
+    e.preventDefault();
+    // TODO: реализовать форму редактирования через API
+    alert('Редактирование через API — в разработке!');
+}
+
+function deleteBook(e) {
+    e.preventDefault();
+    if (!confirm('Удалить эту книгу?')) return;
+    fetch(`/api/books/${bookId}/`, {
+        method: 'DELETE',
+        headers: { 'X-CSRFToken': getCookie('csrftoken') }
+    })
+    .then(r => {
+        if (r.status === 204) {
+            window.location.href = '/books/';
+        } else {
+            alert('Ошибка удаления');
+        }
+    });
+}
+
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+function loadBook() {
+    fetch(`/api/books/${bookId}/`)
+        .then(r => r.json())
+        .then(book => {
+            renderBook(book, book.is_admin);
+            loadReviews();
+        })
+        .catch(() => {
+            container.innerHTML = '<p class="text-center text-danger">Ошибка загрузки данных</p>';
+        });
+}
+
+function loadReviews() {
+    fetch(`/api/books/${bookId}/reviews/`)
+        .then(r => r.json())
+        .then(reviews => {
+            renderReviews(reviews);
+        })
+        .catch(() => {
+            document.getElementById('reviews-list').innerHTML = '<p class="text-danger">Ошибка загрузки отзывов</p>';
+        });
+}
+
+function editReview(reviewId, currentRating, currentComment) {
+    // Создаем модальное окно для редактирования
+    const modal = document.createElement('div');
+    modal.className = 'modal fade';
+    modal.id = 'editReviewModal';
+    modal.innerHTML = `
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Редактировать отзыв</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="edit-review-form">
+                        <div class="mb-3">
+                            <label for="edit-rating" class="form-label">Оценка</label>
+                            <select class="form-select" id="edit-rating" required>
+                                <option value="1" ${currentRating == 1 ? 'selected' : ''}>1 - Плохо</option>
+                                <option value="2" ${currentRating == 2 ? 'selected' : ''}>2 - Не очень</option>
+                                <option value="3" ${currentRating == 3 ? 'selected' : ''}>3 - Удовлетворительно</option>
+                                <option value="4" ${currentRating == 4 ? 'selected' : ''}>4 - Хорошо</option>
+                                <option value="5" ${currentRating == 5 ? 'selected' : ''}>5 - Отлично</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="edit-comment" class="form-label">Комментарий</label>
+                            <textarea class="form-control" id="edit-comment" rows="3" required>${currentComment}</textarea>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+                    <button type="button" class="btn btn-primary" onclick="saveReviewEdit(${reviewId})">Сохранить</button>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(modal);
+    
+    // Показываем модальное окно
+    const modalInstance = new bootstrap.Modal(modal);
+    modalInstance.show();
+    
+    // Удаляем модальное окно после закрытия
+    modal.addEventListener('hidden.bs.modal', function () {
+        document.body.removeChild(modal);
+    });
+}
+
+function saveReviewEdit(reviewId) {
+    const rating = document.getElementById('edit-rating').value;
+    const comment = document.getElementById('edit-comment').value;
+    
+    if (!rating || !comment) {
+        alert('Пожалуйста, заполните все поля');
+        return;
+    }
+    
+    fetch(`/api/reviews/${reviewId}/update/`, {
+        method: 'PUT',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCookie('csrftoken')
+        },
+        body: JSON.stringify({
+            rating: parseInt(rating),
+            comment: comment
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.detail) {
+            alert(data.detail);
+        } else {
+            // Отзыв успешно обновлен
+            alert('Отзыв успешно обновлен!');
+            bootstrap.Modal.getInstance(document.getElementById('editReviewModal')).hide();
+            loadReviews(); // Перезагружаем отзывы
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Ошибка при обновлении отзыва');
+    });
+}
+
+function deleteReview(reviewId) {
+    if (!confirm('Вы уверены, что хотите удалить этот отзыв?')) {
+        return;
+    }
+    
+    fetch(`/api/reviews/${reviewId}/delete/`, {
+        method: 'DELETE',
+        headers: {
+            'X-CSRFToken': getCookie('csrftoken')
+        }
+    })
+    .then(response => {
+        if (response.status === 204) {
+            // Отзыв успешно удален
+            alert('Отзыв успешно удален!');
+            loadReviews(); // Перезагружаем отзывы
+        } else {
+            return response.json().then(data => {
+                alert(data.detail || 'Ошибка при удалении отзыва');
+            });
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Ошибка при удалении отзыва');
+    });
+}
+
+document.addEventListener('DOMContentLoaded', loadBook);
+</script>
+{% endblock %} 

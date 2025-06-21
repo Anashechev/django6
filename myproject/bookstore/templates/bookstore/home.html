@@ -1,0 +1,16 @@
+{% extends 'bookstore/base.html' %}
+
+{% block title %}Добро пожаловать в МАГА-зин{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="jumbotron bg-dark text-white p-5 rounded mb-5">
+        <h1 class="display-4">Добро пожаловать в МАГА-зин</h1>
+        <p class="lead">Откройте для себя мир увлекательных книг и погрузитесь в захватывающие истории.</p>
+        <hr class="my-4">
+        <p>Исследуйте нашу коллекцию книг и найдите свое следующее любимое произведение.</p>
+        <a class="btn btn-primary btn-lg" href="{% url 'bookstore:book_list' %}" role="button">Перейти к книгам</a>
+    </div>
+
+{% endblock %}
+

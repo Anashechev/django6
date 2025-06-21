@@ -1,0 +1,73 @@
+{% extends 'bookstore/base.html' %}
+
+{% block title %}Вход{% endblock %}
+
+{% block content %}
+<div class="container" style="max-width: 400px;">
+    <h2 class="mb-4 text-center">Вход</h2>
+    <form id="login-form">
+        <div class="mb-3">
+            <label for="username" class="form-label">Имя пользователя</label>
+            <input type="text" class="form-control" id="username" name="username" required>
+        </div>
+        <div class="mb-3">
+            <label for="password" class="form-label">Пароль</label>
+            <input type="password" class="form-control" id="password" name="password" required>
+        </div>
+        <button type="submit" class="btn btn-primary w-100">Войти</button>
+    </form>
+    <div id="login-error" class="alert alert-danger mt-3 d-none"></div>
+    <div class="mt-3 text-center">
+        <span>Нет аккаунта?</span> <a href="{% url 'bookstore:register' %}">Зарегистрироваться</a>
+    </div>
+</div>
+<script>
+const form = document.getElementById('login-form');
+const errorDiv = document.getElementById('login-error');
+
+form.addEventListener('submit', function(e) {
+    e.preventDefault();
+    errorDiv.classList.add('d-none');
+    const data = {
+        username: form.username.value,
+        password: form.password.value
+    };
+    fetch('/api/auth/login/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCookie('csrftoken')
+        },
+        body: JSON.stringify(data)
+    })
+    .then(async r => {
+        if (r.ok) {
+            window.location.href = '/profile/';
+        } else {
+            const resp = await r.json();
+            errorDiv.textContent = resp.detail || 'Ошибка входа';
+            errorDiv.classList.remove('d-none');
+        }
+    })
+    .catch(() => {
+        errorDiv.textContent = 'Ошибка входа';
+        errorDiv.classList.remove('d-none');
+    });
+});
+
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+</script>
+{% endblock %} 

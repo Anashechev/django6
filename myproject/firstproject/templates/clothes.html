@@ -1,0 +1,213 @@
+{% extends 'base.html' %}
+
+{% block title %}Каталог книг - МАГА-зин{% endblock %}
+
+{% block extra_css %}
+<style>
+    .catalog-header {
+        text-align: center;
+        margin-bottom: 3rem;
+    }
+
+    .catalog-title {
+        font-size: 2.5rem;
+        color: var(--primary-color);
+        margin-bottom: 1rem;
+    }
+
+    .catalog-subtitle {
+        color: var(--text-color);
+        opacity: 0.8;
+        font-size: 1.1rem;
+        max-width: 600px;
+        margin: 0 auto;
+    }
+
+    .search-bar {
+        max-width: 600px;
+        margin: 0 auto 2rem;
+        position: relative;
+    }
+
+    .search-input {
+        width: 100%;
+        padding: 1rem 1.5rem;
+        border: 2px solid var(--primary-color);
+        border-radius: 8px;
+        font-size: 1rem;
+        transition: all 0.3s ease;
+    }
+
+    .search-input:focus {
+        outline: none;
+        box-shadow: 0 0 0 3px rgba(44, 62, 80, 0.2);
+    }
+
+    .category-tabs {
+        display: flex;
+        gap: 1rem;
+        margin-bottom: 2rem;
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+
+    .category-tab {
+        padding: 0.8rem 1.5rem;
+        border: none;
+        background: var(--white);
+        color: var(--text-color);
+        border-radius: 8px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        font-weight: 500;
+        box-shadow: var(--shadow);
+    }
+
+    .category-tab:hover {
+        background: var(--primary-color);
+        color: var(--white);
+    }
+
+    .category-tab.active {
+        background: var(--primary-color);
+        color: var(--white);
+    }
+
+    .books-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        gap: 2rem;
+    }
+
+    .book-card {
+        background: var(--white);
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: var(--shadow);
+        transition: all 0.3s ease;
+    }
+
+    .book-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+    }
+
+    .book-image {
+        width: 100%;
+        height: 400px;
+        object-fit: cover;
+    }
+
+    .book-info {
+        padding: 1.5rem;
+    }
+
+    .book-title {
+        font-size: 1.2rem;
+        color: var(--primary-color);
+        margin-bottom: 0.5rem;
+        font-weight: 600;
+        line-height: 1.4;
+    }
+
+    .book-author {
+        color: var(--text-color);
+        opacity: 0.8;
+        margin-bottom: 1rem;
+        font-size: 0.95rem;
+    }
+
+    .book-description {
+        color: var(--text-color);
+        opacity: 0.7;
+        margin-bottom: 1rem;
+        font-size: 0.9rem;
+        line-height: 1.5;
+    }
+
+    .book-meta {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-top: 1rem;
+        padding-top: 1rem;
+        border-top: 1px solid rgba(0,0,0,0.1);
+    }
+
+    .book-price {
+        font-size: 1.3rem;
+        color: var(--accent-color);
+        font-weight: 600;
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 3rem;
+        background: var(--white);
+        border-radius: 15px;
+        box-shadow: var(--shadow);
+    }
+
+    .empty-state-text {
+        color: var(--text-color);
+        opacity: 0.7;
+        font-size: 1.1rem;
+    }
+
+    @media (max-width: 768px) {
+        .catalog-title {
+            font-size: 2rem;
+        }
+
+        .books-grid {
+            grid-template-columns: 1fr;
+            padding: 0 1rem;
+        }
+
+        .category-tabs {
+            padding: 0 1rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="catalog-header">
+    <h1 class="catalog-title">Каталог книг</h1>
+    <p class="catalog-subtitle">Откройте для себя мир увлекательных историй и полезных знаний</p>
+</div>
+
+<div class="search-bar">
+    <input type="text" class="search-input" placeholder="Поиск по названию или автору...">
+</div>
+
+<div class="category-tabs">
+    <button class="category-tab active">Все книги</button>
+    <button class="category-tab">Художественная литература</button>
+    <button class="category-tab">Бизнес</button>
+    <button class="category-tab">Психология</button>
+    <button class="category-tab">Детские книги</button>
+</div>
+
+<div class="books-grid">
+    {% for item in clothes %}
+    <div class="book-card">
+        {% if item.photo %}
+            <img src="{{ item.photo.url }}" alt="{{ item.name }}" class="book-image">
+        {% endif %}
+        <div class="book-info">
+            <h3 class="book-title">{{ item.name }}</h3>
+            <p class="book-author">{{ item.color }}</p>
+            <p class="book-description">{{ item.description }}</p>
+            <div class="book-meta">
+                <span class="book-price">{{ item.price }} ₽</span>
+            </div>
+        </div>
+    </div>
+    {% empty %}
+    <div class="empty-state">
+        <p class="empty-state-text">Книги пока не добавлены в каталог</p>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %} 

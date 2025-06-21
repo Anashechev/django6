@@ -1,0 +1,97 @@
+{% extends 'bookstore/base.html' %}
+
+{% block title %}Все книги{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="mb-0">Все книги</h2>
+        {% if user.is_staff or user.is_superuser %}
+            <a href="{% url 'bookstore:book_create' %}" class="btn btn-primary"><i class="fas fa-plus"></i> Добавить книгу</a>
+        {% endif %}
+    </div>
+    <div class="mb-4">
+        <input type="text" id="search-input" class="form-control form-control-lg" placeholder="Поиск по названию или описанию...">
+    </div>
+    <div id="books-list">
+        <!-- Сюда будут подгружаться книги через JS -->
+    </div>
+    <nav class="mt-4">
+        <ul class="pagination justify-content-center" id="pagination"></ul>
+    </nav>
+</div>
+<script>
+const booksList = document.getElementById('books-list');
+const pagination = document.getElementById('pagination');
+const searchInput = document.getElementById('search-input');
+let currentPage = 1;
+let lastQuery = '';
+
+function renderBooks(data) {
+    if (!data.results.length) {
+        booksList.innerHTML = '<p class="text-center">Книги не найдены</p>';
+        pagination.innerHTML = '';
+        return;
+    }
+    let html = '<div class="row row-cols-1 row-cols-md-2 row-cols-lg-4 g-4">';
+    data.results.forEach(book => {
+        html += `<div class="col">
+            <div class="card h-100">
+                ${book.cover_image ? `<img src="${book.cover_image}" class="card-img-top" alt="${book.title}" style="height: 300px; object-fit: cover;">` : `<div class="card-img-top bg-light d-flex align-items-center justify-content-center" style="height: 300px;"><i class='fas fa-book fa-3x text-muted'></i></div>`}
+                <div class="card-body">
+                    <h5 class="card-title">${book.title}</h5>
+                    <p class="card-text">${book.description ? book.description.substring(0, 120) + (book.description.length > 120 ? '...' : '') : ''}</p>
+                    <p class="card-text"><strong>Цена: ${book.price} ₽</strong></p>
+                    <a href="/books/${book.id}/" class="btn btn-primary">Подробнее</a>
+                </div>
+            </div>
+        </div>`;
+    });
+    html += '</div>';
+    booksList.innerHTML = html;
+    renderPagination(data.count, data.next, data.previous);
+}
+
+function renderPagination(count, next, previous) {
+    const pageSize = 5; // Совпадает с PAGE_SIZE в DRF
+    const totalPages = Math.ceil(count / pageSize);
+    let html = '';
+    for (let i = 1; i <= totalPages; i++) {
+        html += `<li class="page-item${i === currentPage ? ' active' : ''}"><a class="page-link" href="#" data-page="${i}">${i}</a></li>`;
+    }
+    pagination.innerHTML = html;
+    Array.from(pagination.querySelectorAll('a.page-link')).forEach(link => {
+        link.addEventListener('click', function(e) {
+            e.preventDefault();
+            const page = parseInt(this.getAttribute('data-page'));
+            if (page !== currentPage) {
+                currentPage = page;
+                loadBooks();
+            }
+        });
+    });
+}
+
+function loadBooks() {
+    let url = `/api/books/?page=${currentPage}`;
+    if (lastQuery) url += `&search=${encodeURIComponent(lastQuery)}`;
+    fetch(url)
+        .then(r => r.json())
+        .then(data => renderBooks(data))
+        .catch(() => {
+            booksList.innerHTML = '<p class="text-center text-danger">Ошибка загрузки данных</p>';
+            pagination.innerHTML = '';
+        });
+}
+
+searchInput.addEventListener('input', function() {
+    lastQuery = this.value.trim();
+    currentPage = 1;
+    loadBooks();
+});
+
+document.addEventListener('DOMContentLoaded', function() {
+    loadBooks();
+});
+</script>
+{% endblock %} 

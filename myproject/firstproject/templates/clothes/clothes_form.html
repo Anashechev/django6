@@ -1,0 +1,7 @@
+<h1>{% if form.instance.pk %}Редактировать позицию{% else %}Добавить новую позицию{% endif %}</h1>
+<form method="post" enctype="multupart/form-data">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit">Сохранить</button>
+</form>
+<a href="{% url 'clothes_list' %}">Вернуться к списку одежды</a>
