@@ -1,12 +1,10 @@
 asgiref==3.8.1
 Django==5.2.2
 djangorestframework==3.16.0
-filelock==3.17.0
 jsonpickle==4.0.2
 mysql==0.0.3
 mysqlclient==2.2.7
 pillow==11.1.0
-pingouin==0.5.5
 psycopg2-binary==2.9.10
 sqlparse==0.5.3
 tzdata==2025.1
